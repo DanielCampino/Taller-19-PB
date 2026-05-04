@@ -1,26 +1,8 @@
 const { test } = require('../fixtures/fixtures');
 const { expect } = require('@playwright/test');
 
-//Interceptar Petición
-test('Interceptar - Modificar petición', async ({ page }) => {
-  await page.route('**/api.practicesoftwaretesting.com/products**', route => {
-    const url = new URL(route.request().url());
-
-    console.log('ANTES:', url.toString());
-    url.searchParams.set('between', 'price,1,10');
-    console.log('DESPUÉS:', url.toString());
-
-    route.continue({
-      url: url.toString()
-    });
-  });
-
-  await page.goto('https://practicesoftwaretesting.com');
-  await page.waitForTimeout(5000);
-});
-
-//Mock request
-test('Mock request', async ({ page }) => {
+//Interceptar petición
+test('Interceptar petición', async ({ page }) => {
 
   await page.route('**/practicesoftwaretesting.com**', async route => {
     const headers = route.request().headers();
@@ -56,8 +38,8 @@ test('Modificar respuesta', async ({ page }) => {
   await expect(products.first()).toContainText('Producto Modificado');
 });
 
-//Productos vacios
-test('Productos vacios', async ({ page }) => {
+//Mock - Productos vacios
+test('Mock - Productos vacios', async ({ page }) => {
 
   await page.route('**/api.practicesoftwaretesting.com/products**', route => {
     route.fulfill({
