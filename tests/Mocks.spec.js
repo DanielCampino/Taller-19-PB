@@ -19,6 +19,21 @@ test('Interceptar - Modificar petición', async ({ page }) => {
   await page.waitForTimeout(5000);
 });
 
+//Mock request
+test('Mock request', async ({ page }) => {
+
+  await page.route('**https://practicesoftwaretesting.com**', async route => {
+    const headers = route.request().headers();
+
+    headers['x-test-header'] = 'Mock-Header';
+    expect(headers['x-test-header']).toBe('Mock-Header');
+
+    await route.continue({ headers });
+  });
+
+  await page.goto('https://practicesoftwaretesting.com');
+});
+
 //Modificar respuesta
 test('Modificar respuesta', async ({ page }) => {
   await page.route('**/api.practicesoftwaretesting.com/products**', async route => {
