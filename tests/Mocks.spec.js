@@ -22,7 +22,7 @@ test('Interceptar - Modificar petición', async ({ page }) => {
 //Mock request
 test('Mock request', async ({ page }) => {
 
-  await page.route('**https://practicesoftwaretesting.com**', async route => {
+  await page.route('**/practicesoftwaretesting.com**', async route => {
     const headers = route.request().headers();
 
     headers['x-test-header'] = 'Mock-Header';
