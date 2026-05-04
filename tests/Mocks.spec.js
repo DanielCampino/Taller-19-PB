@@ -1,0 +1,74 @@
+const { test } = require('../fixtures/fixtures');
+const { expect } = require('@playwright/test');
+
+//Interceptar Petición
+test('Interceptar - Modificar petición', async ({ page }) => {
+  await page.route('**/api.practicesoftwaretesting.com/products**', route => {
+    const url = new URL(route.request().url());
+
+    console.log('ANTES:', url.toString());
+    url.searchParams.set('between', 'price,1,10');
+    console.log('DESPUÉS:', url.toString());
+
+    route.continue({
+      url: url.toString()
+    });
+  });
+
+  await page.goto('https://practicesoftwaretesting.com');
+  await page.waitForTimeout(5000);
+});
+
+//Modificar respuesta
+test('Modificar respuesta', async ({ page }) => {
+  await page.route('**/api.practicesoftwaretesting.com/products**', async route => {
+    const response = await route.fetch();
+    const json = await response.json();
+
+    json.data[0].name = 'Producto Modificado';
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(json)
+    });
+  });
+
+  await page.goto('https://practicesoftwaretesting.com');
+
+  const products = page.locator('.card');
+  await expect(products.first()).toBeVisible();
+  await expect(products.first()).toContainText('Producto Modificado');
+});
+
+//Productos vacios
+test('Productos vacios', async ({ page }) => {
+
+  await page.route('**/api.practicesoftwaretesting.com/products**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [] })
+    });
+  });
+
+  await page.goto('https://practicesoftwaretesting.com');
+  await expect(page.locator('[data-test="no-results"]')).toBeVisible();
+  await expect(page.locator('.card')).toHaveCount(0);
+});
+
+//Error de Servidor
+test('Error de Servidor', async ({ page }) => {
+  await page.route('**/api.practicesoftwaretesting.com/products**', route => {
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Internal Server Error' })
+    });
+  });
+
+  await page.goto('https://practicesoftwaretesting.com');
+
+  const products = page.locator('.card');
+  await expect(products).toHaveCount(0);
+});
